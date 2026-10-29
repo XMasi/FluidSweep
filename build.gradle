@@ -1,0 +1,58 @@
+import groovy.json.JsonSlurper
+plugins { id 'fabric-loom' version '1.17.21' apply false }
+def target = providers.gradleProperty('mc').getOrElse('1.21.6')
+def spec = new JsonSlurper().parse(file('versions.json')).find { it.minecraft == target }
+if (spec == null) throw new GradleException("Unsupported Minecraft version: $target")
+apply plugin: (spec.yarn ? 'fabric-loom' : 'net.fabricmc.fabric-loom')
+version = "1.3.0+${target}"
+group = 'xmasi.fluidsweep'
+base { archivesName = 'fluid-sweep' }
+buildDir = file("build/${target}")
+repositories { maven { url 'https://api.modrinth.com/maven' } }
+dependencies {
+ minecraft "com.mojang:minecraft:${target}"
+ if (spec.yarn) mappings "net.fabricmc:yarn:${spec.yarn}:v2"
+ add(spec.yarn ? 'modImplementation' : 'implementation', 'net.fabricmc:fabric-loader:0.19.3')
+ add(spec.yarn ? 'modImplementation' : 'implementation', "net.fabricmc.fabric-api:fabric-api:${spec['fabric-api'].version}")
+ add(spec.yarn ? 'modImplementation' : 'implementation', "maven.modrinth:malilib:${spec.malilib.version}")
+ add(spec.yarn ? 'modCompileOnly' : 'compileOnly', "maven.modrinth:modmenu:${spec.modmenu.version}")
+ add(spec.yarn ? 'modLocalRuntime' : 'runtimeOnly', "maven.modrinth:modmenu:${spec.modmenu.version}")
+}
+def minor = target.startsWith('1.21.') ? target.substring(5).toInteger() : 0
+def prepared = layout.buildDirectory.dir('compatSrc')
+sourceSets.main.java.setSrcDirs([prepared])
+tasks.register('prepareVersionSources') {
+ inputs.dir(target.startsWith('26.') ? 'src/mojang/java' : 'src/main/java')
+ inputs.property('mc', target)
+ outputs.dir(prepared)
+ doLast {
+  copy {
+   from(target.startsWith('26.') ? 'src/mojang/java' : 'src/main/java')
+   into(prepared)
+   filter { line ->
+    def result = line.replace('1.2.1 for Minecraft 1.21.6', "1.3.0 for Minecraft ${target}")
+    if (!target.startsWith('26.') && minor < 5) {
+     result = result.replace('inventory.setSelectedSlot(slot);', 'inventory.selectedSlot = slot;')
+     result = result.replace('inventory.getSelectedStack()', 'mc.player.getMainHandStack()')
+    }
+    if (target.startsWith('26.1')) result = result.replace('.gui.screen()', '.screen')
+    if (target.startsWith('26.') && target != '26.3') result = result.replace('mc.player.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT, true)', 'mc.player.swing(InteractionHand.MAIN_HAND)')
+    result
+   }
+  }
+ }
+}
+compileJava.dependsOn prepareVersionSources
+processResources {
+ inputs.properties(version: project.version, minecraft: target, malilib: spec.malilib.version, java: spec.java)
+ filesMatching('fabric.mod.json') { expand version: project.version, minecraft: target, malilib: spec.malilib.version, java: spec.java }
+}
+java {
+ sourceCompatibility = JavaVersion.toVersion(spec.java)
+ targetCompatibility = JavaVersion.toVersion(spec.java)
+ withSourcesJar()
+}
+tasks.named('sourcesJar') { dependsOn prepareVersionSources, compileJava }
+tasks.withType(JavaCompile).configureEach { options.release = spec.java; options.encoding = 'UTF-8' }
+jar { from('LICENSE'); from('NOTICE.md') }
+

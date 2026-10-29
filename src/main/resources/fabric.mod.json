@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "fluidsweep",
+  "version": "${version}",
+  "name": "Fluid Sweep",
+  "description": "Client-side helper for clearing nearby water and lava sources with slime or resin blocks. Includes gravity-block placement with sand, gravel and concrete powder, plus optional cleanup of placed slime and resin.",
+  "authors": ["XMasi"],
+  "contact": {
+    "homepage": "https://github.com/XMasi/FluidSweep",
+    "sources": "https://github.com/XMasi/FluidSweep",
+    "issues": "https://github.com/XMasi/FluidSweep/issues"
+  },
+  "license": "LGPL-2.1-only",
+  "icon": "assets/fluidsweep/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["xmasi.fluidsweep.FluidSweepClient"],
+    "modmenu": ["xmasi.fluidsweep.ModMenuIntegration"]
+  },
+  "custom": { "modmenu:clientsideOnly": true },
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "fabric-api": "*",
+    "malilib": ">=${malilib}",
+    "minecraft": "${minecraft}",
+    "java": ">=${java}"
+  },
+  "suggests": { "modmenu": "*" },
+  "breaks": { "lavasponge": "*" }
+}
+

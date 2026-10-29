@@ -27,7 +27,7 @@ jobs:
           name: fluid-sweep-${{ matrix.minecraft }}
           path: build/${{ matrix.minecraft }}/libs/*.jar
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -40,6 +40,8 @@ jobs:
           path: dist
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v1.3.0
+          target_commitish: ${{ github.sha }}
           name: Fluid Sweep 1.3.0 Beta — Minecraft 1.21 to 26.3
           prerelease: true
           generate_release_notes: true

@@ -54,5 +54,5 @@ java {
 }
 tasks.named('sourcesJar') { dependsOn prepareVersionSources, compileJava }
 tasks.withType(JavaCompile).configureEach { options.release = spec.java; options.encoding = 'UTF-8' }
-jar { from('LICENSE'); from('NOTICE.md') }
+jar { from('LICENSE') }
 

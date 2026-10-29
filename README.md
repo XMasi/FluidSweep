@@ -82,5 +82,5 @@ GitHub Actions builds every target. Tags beginning with `v` create a prerelease 
 
 ## License
 
-**LGPL-2.1-only**. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for the full license and upstream attribution.
+**LGPL-2.1-only**. See [LICENSE](LICENSE) for the full license and upstream attribution.
 
